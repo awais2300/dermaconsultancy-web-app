@@ -1,0 +1,26 @@
+@if (submitted) {
+  <div class="card"><h2>Thank you!</h2><p>We received your request and will contact you to confirm.</p></div>
+} @else {
+  <h1>Book a consultation</h1>
+  <div class="card">
+    <form (ngSubmit)="submit()" #f="ngForm">
+      <label>Full name
+        <input name="name" [(ngModel)]="model.name" required />
+      </label>
+      <label>Email
+        <input name="email" type="email" [(ngModel)]="model.email" required email />
+      </label>
+      <label>Phone
+        <input name="phone" [(ngModel)]="model.phone" required />
+      </label>
+      <label>Preferred date
+        <input name="preferredDate" type="date" [(ngModel)]="model.preferredDate" required />
+      </label>
+      <label>Skin concern
+        <textarea name="concern" rows="4" [(ngModel)]="model.concern" required></textarea>
+      </label>
+      <button type="submit" [disabled]="f.invalid">Request appointment</button>
+      @if (error) { <p class="error">{{ error }}</p> }
+    </form>
+  </div>
+}

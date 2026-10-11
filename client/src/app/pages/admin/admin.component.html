@@ -1,0 +1,29 @@
+<h1>Appointment requests</h1>
+<div class="card">
+  <form (ngSubmit)="load()" style="grid-template-columns: 1fr auto; align-items: end;">
+    <label>Admin key
+      <input name="key" type="password" [(ngModel)]="key" autocomplete="off" />
+    </label>
+    <button type="submit">Load</button>
+  </form>
+  @if (error) { <p class="error">{{ error }}</p> }
+</div>
+
+<div class="table-wrap">
+  <table>
+    <tr><th>Name</th><th>Contact</th><th>Date</th><th>Concern</th><th>Status</th><th></th></tr>
+    @for (a of items; track a.id) {
+      <tr>
+        <td>{{ a.name }}</td>
+        <td>{{ a.email }}<br />{{ a.phone }}</td>
+        <td>{{ a.preferred_date }}</td>
+        <td>{{ a.concern }}</td>
+        <td><span class="badge" [class]="'badge ' + a.status">{{ a.status }}</span></td>
+        <td class="actions">
+          <button (click)="setStatus(a.id, 'confirmed')">Confirm</button>
+          <button class="secondary" (click)="setStatus(a.id, 'cancelled')">Cancel</button>
+        </td>
+      </tr>
+    }
+  </table>
+</div>
