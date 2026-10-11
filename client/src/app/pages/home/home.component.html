@@ -1,13 +1,63 @@
 <section class="hero">
-  <h1>Healthy skin starts with expert care</h1>
-  <p>Personalised dermatology consultations for acne, eczema, pigmentation, hair and nail concerns.</p>
-  <a class="btn" routerLink="/book">Request an appointment</a>
+  <div class="container hero-inner">
+    <h1>Your Trusted Skin Care Partner</h1>
+    <p>Personalised dermatological care for every skin type and concern. Book an appointment and take the first step toward healthier skin.</p>
+    <a class="btn btn-light" routerLink="/book">Book Now</a>
+  </div>
 </section>
 
-<h2>Our services</h2>
-<div class="grid">
-  <div class="card"><h3>Acne &amp; Scars</h3><p>Targeted treatment plans for active acne and scarring.</p></div>
-  <div class="card"><h3>Eczema &amp; Psoriasis</h3><p>Long-term care for chronic skin conditions.</p></div>
-  <div class="card"><h3>Pigmentation</h3><p>Evening skin tone and anti-aging care.</p></div>
-  <div class="card"><h3>Hair Loss</h3><p>Diagnosis and treatment for hair concerns.</p></div>
-</div>
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <h2>Meet Our Dedicated Dermatology Team</h2>
+      <p>Comprehensive skin solutions for all ages and skin conditions.</p>
+    </div>
+    <div class="trio">
+      <img src="images/team-1.jpg" alt="Facial treatment in a clinic" />
+      <img src="images/team-2.jpg" alt="Skin care consultation" />
+      <img src="images/team-3.jpg" alt="Close-up skin examination" />
+    </div>
+  </div>
+</section>
+
+<section class="section soft">
+  <div class="container split">
+    <div>
+      <p class="eyebrow">About us</p>
+      <h2>Our Journey in Skin Care</h2>
+      <p>We bring together experienced dermatologists and a patient-first approach to make skin health simple and accessible.</p>
+      <p>Every patient is listened to, understood and supported from the first consultation onward.</p>
+      <a class="btn" routerLink="/about">Read More</a>
+    </div>
+    <img class="rounded" src="images/about.jpg" alt="Our clinic" />
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <p class="eyebrow">Our Offerings</p>
+      <h2>Comprehensive Skin Services Tailored For You</h2>
+    </div>
+    <div class="cards">
+      @for (s of services; track s.title) {
+        <article class="service-card">
+          <img [src]="s.image" [alt]="s.title" />
+          <div class="service-body">
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.summary }}</p>
+            <a class="link" routerLink="/services">Learn More →</a>
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <h2>Start Your Skin Transformation Journey Today</h2>
+    <p>Let our team help you achieve healthy, confident skin.</p>
+    <a class="btn btn-light" routerLink="/book">Book Now</a>
+  </div>
+</section>

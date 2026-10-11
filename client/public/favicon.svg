@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b9189"/>
+      <stop offset="1" stop-color="#1f5a55"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <!-- droplet -->
+  <path d="M256 92 C 330 190, 386 252, 386 322 A 130 130 0 0 1 126 322 C 126 252, 182 190, 256 92 Z" fill="#ffffff"/>
+  <!-- leaf inside droplet -->
+  <path d="M256 394 C 196 360, 196 292, 256 236 C 316 292, 316 360, 256 394 Z" fill="#2f7f79"/>
+  <path d="M256 388 L256 262" stroke="#ffffff" stroke-opacity="0.7" stroke-width="9" stroke-linecap="round" fill="none"/>
+</svg>

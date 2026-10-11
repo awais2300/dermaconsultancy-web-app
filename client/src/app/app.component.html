@@ -1,9 +1,41 @@
-<header class="nav">
-  <strong>Derma Consultancy</strong>
-  <nav>
-    <a routerLink="/">Home</a>
-    <a routerLink="/book">Book a consultation</a>
-  </nav>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" routerLink="/" (click)="menuOpen = false">
+      <span class="brand-mark">D</span>
+      <span>dermaconsultancy</span>
+    </a>
+
+    <button class="menu-toggle" type="button" aria-label="Toggle menu" (click)="menuOpen = !menuOpen">☰</button>
+
+    <nav class="nav-links" [class.open]="menuOpen">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">Home</a>
+      <a routerLink="/about" routerLinkActive="active" (click)="menuOpen = false">About</a>
+      <a routerLink="/services" routerLinkActive="active" (click)="menuOpen = false">Services</a>
+      <a routerLink="/book" routerLinkActive="active" (click)="menuOpen = false">Contact</a>
+      <a class="btn nav-cta" routerLink="/book" (click)="menuOpen = false">Book Now</a>
+    </nav>
+  </div>
 </header>
-<main><router-outlet /></main>
-<footer class="footer">© Derma Consultancy. All rights reserved.</footer>
+
+<router-outlet />
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>dermaconsultancy</h3>
+      <p>Your trusted skin care partner.</p>
+    </div>
+    <div>
+      <h4>Quick links</h4>
+      <a routerLink="/">Home</a>
+      <a routerLink="/about">About</a>
+      <a routerLink="/services">Services</a>
+      <a routerLink="/book">Book an appointment</a>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <p>Add your address, phone number and email here.</p>
+    </div>
+  </div>
+  <div class="container footer-bottom">© {{ year }} dermaconsultancy. All rights reserved.</div>
+</footer>
