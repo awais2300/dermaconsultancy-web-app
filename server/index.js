@@ -53,4 +53,13 @@ app.patch('/api/appointments/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-app.listen(3000, () => console.log('API running on http://localhost:3000'));
+const path = require('path');
+const dist = path.join(__dirname, '..', 'client', 'dist', 'client', 'browser');
+app.use(express.static(dist));
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(dist, 'index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Running on port ${PORT}`));

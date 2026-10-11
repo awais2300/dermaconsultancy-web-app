@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
-  private api = 'http://localhost:3000/api/appointments';
+  //private api = 'http://localhost:3000/api/appointments';
+  private api = '/api/appointments';
 
   constructor(private http: HttpClient) {}
 
