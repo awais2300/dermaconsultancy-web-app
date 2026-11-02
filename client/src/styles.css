@@ -28,13 +28,13 @@ h4 { margin: 0 0 .5rem; font-size: 1rem; }
 .section-head { margin-bottom: 2rem; }
 .center { text-align: center; }
 .eyebrow { color: var(--primary); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: .8rem; margin-bottom: .5rem; }
-.rounded { border-radius: var(--radius); }
+.rounded { border-radius: 10px}
 
 /* Header */
 .site-header { position: sticky; top: 0; z-index: 20; background: #fff; border-bottom: 1px solid var(--border); }
 .header-inner { display: flex; align-items: center; justify-content: space-between; padding-top: .8rem; padding-bottom: .8rem; }
 .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--primary); font-weight: 600; font-size: 1.15rem; }
-.brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff; font-family: 'Playfair Display', serif; }
+.brand-mark { display: grid; place-items: center; width: 55px; height: 55px; border-radius: 50%; background: var(--primary); color: #fff; font-family: 'Playfair Display', serif; }
 .nav-links { display: flex; align-items: center; gap: 1.5rem; }
 .nav-links a { text-decoration: none; color: var(--text); font-weight: 500; }
 .nav-links a:hover, .nav-links a.active { color: var(--primary); }
@@ -60,7 +60,7 @@ button.secondary:hover { background: var(--soft); }
 /* Hero */
 .hero {
   background-color: #1f4f4b;
-  background-image: linear-gradient(90deg, rgba(20, 60, 56, .88), rgba(20, 60, 56, .35)), url('/images/hero.jpg');
+  background-image: linear-gradient(90deg, rgba(20, 60, 56, .88), rgba(20, 60, 56, .35)), url('/images/hero.png');
   background-size: cover; background-position: center;
   color: #fff; padding: 7rem 0;
 }
