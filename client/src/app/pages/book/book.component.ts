@@ -129,7 +129,7 @@ export class BookComponent {
       error: (err) => {
         console.error('Appointment submission error:', err);
 
-        this.error = 'Could not submit your appointment. Please try again.';
+        this.error = 'Fill in the required fields. Please try again.';
         this.isSubmitting = false;
       }
 
