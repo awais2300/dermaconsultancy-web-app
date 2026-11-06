@@ -1,13 +1,24 @@
 
 require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { Pool } = require('pg');
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
+const nodemailer = require('nodemailer');
 
+const transporter = nodemailer.createTransport({
+  host: 'mail.privateemail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 // Middleware
 app.use(cors({
   origin: 'http://localhost:4200'
@@ -20,11 +31,50 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
+const paymentDir = path.join(
+  process.cwd(),
+  'uploads',
+  'payments'
+);
+
+fs.mkdirSync(paymentDir, { recursive: true });
+
+// Multer storage configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, paymentDir);
+  },
+
+  filename: (req, file, cb) => {
+    const uniqueName =
+      Date.now() + '-' + file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+    cb(null, uniqueName);
+  }
+});
+
+// Allow image files only
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5 MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG and PNG images are allowed.'));
+    }
+  }
+});
+
 // Check the database connection and create the table
 async function initializeDatabase() {
   // Verify the PostgreSQL connection
   await pool.query('SELECT NOW()');
-
+await pool.query('DROP TABLE IF EXISTS appointments CASCADE');
   // Create appointments table if it does not exist
   await pool.query(`
     CREATE TABLE IF NOT EXISTS appointments (
@@ -35,6 +85,7 @@ async function initializeDatabase() {
       concern TEXT NOT NULL,
       preferred_date TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
+       payment_screenshot TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -60,8 +111,12 @@ function requireAdmin(req, res, next) {
 // API 1: Submit a new appointment (public)
 // POST /api/appointments
 // --------------------------------------------------
-app.post('/api/appointments', async (req, res, next) => {
+
+app.post('/api/appointments',
+  upload.single('paymentScreenshot'), async (req, res, next) => {
   try {
+    console.log('Request body:', req.body);
+console.log('Uploaded file:', req.file);
     const {
       name,
       email,
@@ -71,37 +126,111 @@ app.post('/api/appointments', async (req, res, next) => {
     } = req.body;
 
     // Validate required fields
-    if (
-      !name ||
-      !email ||
-      !phone ||
-      !concern ||
-      !preferredDate
-    ) {
+    if (!name || !email || !phone || !concern || !preferredDate) {
       return res.status(400).json({
         error: 'All fields are required.'
       });
     }
-
+ // Validate payment screenshot
+      if (!req.file) {
+        return res.status(400).json({
+          error: 'Payment screenshot is required.'
+        });
+      }
     // Save appointment to PostgreSQL
-    const result = await pool.query(
-      `INSERT INTO appointments
-        (name, email, phone, concern, preferred_date)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, status, created_at`,
-      [
-        name,
-        email,
-        phone,
-        concern,
-        preferredDate
-      ]
-    );
+    // Get uploaded payment screenshot path
+const paymentScreenshot =
+  'uploads/payments/' + req.file.filename;
+  
+   const result = await pool.query(
+  `INSERT INTO appointments
+    (name, email, phone, concern, preferred_date, payment_screenshot)
+   VALUES ($1, $2, $3, $4, $5, $6)
+   RETURNING id, status, created_at, payment_screenshot`,
+  [
+    name,
+    email,
+    phone,
+    concern,
+    preferredDate,
+    paymentScreenshot
+  ]
+);
 
+    // Send appointment notification email
+    try {
+      await transporter.sendMail({
+        from: `"Derma Consultancy" <${process.env.EMAIL_USER}>`,
+        to: process.env.ADMIN_EMAIL,
+        subject: 'New Appointment Booking - Derma Consultancy',
+
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto; color: #333; line-height: 1.6;">
+
+            <p>Dear Sir/Ma'am,</p>
+
+            <p>
+              A new appointment request has been received through
+              <strong>Derma Consultancy</strong>.
+            </p>
+
+            <p>Please review the following appointment details:</p>
+
+            <h3 style="color: #356b68;">Appointment Details:</h3>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold; width: 40%;">Patient Name:</td>
+                <td style="border: 1px solid #ddd; padding: 10px;">${name}</td>
+              </tr>
+
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Email Address:</td>
+                <td style="border: 1px solid #ddd; padding: 10px;">${email}</td>
+              </tr>
+
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Phone Number:</td>
+                <td style="border: 1px solid #ddd; padding: 10px;">${phone}</td>
+              </tr>
+
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Concern:</td>
+                <td style="border: 1px solid #ddd; padding: 10px;">${concern}</td>
+              </tr>
+
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Preferred Date/Time:</td>
+                <td style="border: 1px solid #ddd; padding: 10px;">${preferredDate}</td>
+              </tr>
+
+            </table>
+
+            <p>Please log in to the appointment management system to review and update the appointment status.</p>
+
+            <p>
+              Best regards,<br><br>
+              <strong>Derma Consultancy</strong><br>
+              Expert Dermatology and Skin Care Services<br>
+              Email: <a href="mailto:derma@broadshelves.com">derma@broadshelves.com</a>
+            </p>
+
+          </div>
+        `
+      });
+
+    } catch (emailError) {
+      // Email failure should not undo a successfully saved appointment
+      console.error('Email notification failed:', emailError);
+    }
+
+    // Send response only once
     return res.status(201).json({
       message: 'Appointment request submitted successfully.',
       appointment: result.rows[0]
     });
+
   } catch (error) {
     next(error);
   }
