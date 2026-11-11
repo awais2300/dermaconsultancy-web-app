@@ -94,15 +94,15 @@
           <div class="payment-details">
             <div>
               <span>Payment Method </span>
-              <strong>EasyPaisa</strong>
+              <strong>Meezan Bank</strong>
             </div>
             <div>
               <span>Account Title </span>
-              <strong>YOUR ACCOUNT TITLE</strong>
+              <strong>Aftab Munir</strong>
             </div>
             <div>
-              <span>EasyPaisa Number </span>
-              <strong>03XX-XXXXXXX</strong>
+              <span>Account Number </span>
+              <strong>02310103141267</strong>
             </div>
           </div>
         </div>
@@ -169,13 +169,22 @@
           <p class="error">{{ error }}</p>
         }
 
-        <button
-          type="submit"
-          class="submit-button"
-          [disabled]="f.invalid || !paymentScreenshot || submitted"
-        >
-          {{ submitted ? 'Submitting...' : 'Submit Appointment Request' }}
-        </button>
+      <button
+  type="submit"
+  class="submit-button"
+  [disabled]="f.invalid || !paymentScreenshot || isSubmitting"
+>
+  @if (isSubmitting) {
+    <img
+      src="images/preview.gif"
+      alt="Loading..."
+      class="loading-image"
+    />
+    Submitting...
+  } @else {
+    Submit Appointment Request
+  }
+</button>
 
      
 
