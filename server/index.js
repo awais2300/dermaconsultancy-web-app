@@ -74,7 +74,7 @@ const upload = multer({
 async function initializeDatabase() {
   // Verify the PostgreSQL connection
   await pool.query('SELECT NOW()');
-await pool.query('DROP TABLE IF EXISTS appointments CASCADE');
+// await pool.query('DROP TABLE IF EXISTS appointments CASCADE');
   // Create appointments table if it does not exist
   await pool.query(`
     CREATE TABLE IF NOT EXISTS appointments (
@@ -141,7 +141,7 @@ console.log('Uploaded file:', req.file);
     // Get uploaded payment screenshot path
 const paymentScreenshot =
   'uploads/payments/' + req.file.filename;
-  
+
    const result = await pool.query(
   `INSERT INTO appointments
     (name, email, phone, concern, preferred_date, payment_screenshot)
@@ -206,9 +206,7 @@ const paymentScreenshot =
               </tr>
 
             </table>
-
-            <p>Please log in to the appointment management system to review and update the appointment status.</p>
-
+            You will get a confirmation email once the appointment is reviewed and approved.
             <p>
               Best regards,<br><br>
               <strong>Derma Consultancy</strong><br>
@@ -241,8 +239,12 @@ const paymentScreenshot =
 // GET /api/appointments
 // Requires x-admin-key header
 // --------------------------------------------------
+// Get all appointments (admin only)
 app.get('/api/appointments', requireAdmin, async (req, res, next) => {
   try {
+    // Prevent browser caching
+    res.set('Cache-Control', 'no-store');
+
     const result = await pool.query(
       `SELECT
          id,
@@ -252,23 +254,27 @@ app.get('/api/appointments', requireAdmin, async (req, res, next) => {
          concern,
          preferred_date,
          status,
-         created_at
+         created_at,
+         payment_screenshot
        FROM appointments
        ORDER BY created_at DESC`
     );
 
-    return res.json(result.rows);
+    console.log('Fetched appointments:', result.rows.length);
+
+    return res.status(200).json(result.rows);
+
   } catch (error) {
     next(error);
   }
 });
-
 // --------------------------------------------------
 // API 3: Update appointment status (admin only)
 // PATCH /api/appointments/:id
 // Status: pending, confirmed, cancelled
 // Requires x-admin-key header
 // --------------------------------------------------
+
 app.patch('/api/appointments/:id', requireAdmin, async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -282,32 +288,114 @@ app.patch('/api/appointments/:id', requireAdmin, async (req, res, next) => {
 
     if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
       return res.status(400).json({
-        error: 'Status must be pending, confirmed, or cancelled.'
+        error: 'Invalid appointment status.'
       });
     }
 
+    // Update appointment status and retrieve patient details
     const result = await pool.query(
       `UPDATE appointments
        SET status = $1
-       WHERE id = $2
-       RETURNING id, status`,
+       WHERE id = $2 AND status <> $1
+       RETURNING id, name, email, preferred_date, status`,
       [status, appointmentId]
     );
 
+    // Check whether appointment exists or already has this status
     if (result.rowCount === 0) {
-      return res.status(404).json({
-        error: 'Appointment not found.'
+      const existing = await pool.query(
+        `SELECT id, status FROM appointments WHERE id = $1`,
+        [appointmentId]
+      );
+
+      if (existing.rowCount === 0) {
+        return res.status(404).json({
+          error: 'Appointment not found.'
+        });
+      }
+
+      return res.json({
+        message: 'Appointment already has this status.',
+        appointment: existing.rows[0]
       });
+    }
+
+    const appointment = result.rows[0];
+
+    // Send email to patient
+    try {
+      let subject;
+      let emailMessage;
+
+      if (status === 'confirmed') {
+        subject = 'Appointment Confirmed - Derma Consultancy';
+
+        emailMessage = `
+Dear ${appointment.name},
+
+Good news! Your appointment request with Derma Consultancy has been confirmed.
+
+Appointment Details:
+Patient Name: ${appointment.name}
+Preferred Date/Time: ${appointment.preferred_date}
+Status: Confirmed
+
+We look forward to seeing you.
+
+Best regards,
+Derma Consultancy
+Expert Dermatology and Skin Care Services
+        `;
+      }
+
+      if (status === 'cancelled') {
+        subject = 'Appointment Cancelled - Derma Consultancy';
+
+        emailMessage = `
+Dear ${appointment.name},
+
+We regret to inform you that your appointment request with Derma Consultancy has been cancelled.
+
+Appointment Details:
+Patient Name: ${appointment.name}
+Preferred Date/Time: ${appointment.preferred_date}
+Status: Cancelled
+
+For further assistance or to request another appointment, please contact Derma Consultancy.
+
+Best regards,
+Derma Consultancy
+Expert Dermatology and Skin Care Services
+        `;
+      }
+console.log(`Sending status email to ${emailMessage} with subject: ${subject}`);
+      await transporter.sendMail({
+        from: `"Derma Consultancy" <${process.env.EMAIL_USER}>`,
+        to: appointment.email,
+        subject: subject,
+        text: emailMessage
+      });
+
+      console.log(`Status email sent to ${appointment.email}`);
+
+    } catch (emailError) {
+      // Do not undo the database update if email fails
+      console.error('Appointment status email failed:', emailError);
     }
 
     return res.json({
       message: 'Appointment status updated successfully.',
-      appointment: result.rows[0]
+      appointment: {
+        id: appointment.id,
+        status: appointment.status
+      }
     });
+
   } catch (error) {
     next(error);
   }
 });
+
 
 // --------------------------------------------------
 // Serve the Angular frontend
